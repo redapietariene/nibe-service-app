@@ -137,7 +137,10 @@ export default function AlarmChart({ records }: AlarmChartProps) {
                 </div>
               ))}
             </div>
-            <div className="mt-1 flex" style={{ width: `${data.length * MIN_SLOT_PX}px` }}>
+            <div
+              className="mt-1 flex min-w-full"
+              style={{ width: `${data.length * MIN_SLOT_PX}px` }}
+            >
               {data.map((point, index) => (
                 <div
                   key={point.bucket}
