@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import AlarmChart from "./components/AlarmChart";
 import AnalysisList from "./components/AnalysisList";
 import FileUploader from "./components/FileUploader";
 import { getAnalyses, type AnalysisRecord } from "@/lib/db";
@@ -33,6 +34,7 @@ export default function Home() {
         />
         <div className="mt-10 w-full">
           <FileUploader onAnalyzed={loadRecords} />
+          <AlarmChart records={records} />
           <AnalysisList records={records} />
         </div>
       </main>
