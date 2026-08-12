@@ -40,7 +40,12 @@ export default function AnalysisList({ records }: AnalysisListProps) {
               <dd>
                 {analysis.alarms.length
                   ? `Yes, ${analysis.alarms
-                      .map((alarm) => `${alarm.code} x ${alarm.count}`)
+                      .map(
+                        (alarm) =>
+                          `${alarm.code} x ${alarm.count} (${(alarm.startTimes ?? [])
+                            .map((t) => t.slice(11, 16))
+                            .join(", ")})`,
+                      )
                       .join(", ")}`
                   : "No"}
               </dd>

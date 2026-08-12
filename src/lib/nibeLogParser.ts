@@ -3,6 +3,7 @@ export interface NibeAlarm {
   firstSeen: string;
   lastSeen: string;
   count: number;
+  startTimes: string[];
 }
 
 export interface AlarmCountBucket {
@@ -67,12 +68,14 @@ export function parseNibeLog(text: string): NibeLogAnalysis {
     if (existing) {
       existing.lastSeen = timestamp;
       existing.count += 1;
+      existing.startTimes.push(timestamp);
     } else {
       alarmsByCode.set(code as string, {
         code: code as string,
         firstSeen: timestamp,
         lastSeen: timestamp,
         count: 1,
+        startTimes: [timestamp],
       });
     }
 
