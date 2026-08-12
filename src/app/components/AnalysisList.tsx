@@ -1,5 +1,6 @@
 import type { AnalysisRecord } from "@/lib/db";
 import type { NibeLogAnalysis } from "@/lib/nibeLogParser";
+import { decodeSerialNumber } from "@/lib/serialNumber";
 
 interface AnalysisListProps {
   records: AnalysisRecord[];
@@ -16,6 +17,7 @@ export default function AnalysisList({ records }: AnalysisListProps) {
     <ul className="mt-6 flex w-full flex-col gap-3">
       {sorted.map((record) => {
         const analysis = record.result as NibeLogAnalysis;
+        const serialInfo = decodeSerialNumber(analysis.serialNumber);
         return (
           <li
             key={record.id}
@@ -34,6 +36,10 @@ export default function AnalysisList({ records }: AnalysisListProps) {
               </dd>
               <dt>Serial number</dt>
               <dd>{analysis.serialNumber ?? "—"}</dd>
+              <dt>Article number</dt>
+              <dd>{serialInfo?.articleNumber ?? "—"}</dd>
+              <dt>Date of manufacturing</dt>
+              <dd>{serialInfo?.manufactureDate ?? "—"}</dd>
               <dt>Software version</dt>
               <dd>{analysis.softwareVersion ?? "—"}</dd>
               <dt>Alarms</dt>
