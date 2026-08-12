@@ -64,3 +64,13 @@ export async function deleteAnalysis(id: number): Promise<void> {
     request.onerror = () => reject(request.error);
   });
 }
+
+export async function clearAllAnalyses(): Promise<void> {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const request = tx.objectStore(STORE_NAME).clear();
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
