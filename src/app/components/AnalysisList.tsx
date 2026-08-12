@@ -39,8 +39,10 @@ export default function AnalysisList({ records }: AnalysisListProps) {
               <dt>Alarms</dt>
               <dd>
                 {analysis.alarms.length
-                  ? analysis.alarms.map((alarm) => alarm.code).join(", ")
-                  : "None"}
+                  ? `Yes, ${analysis.alarms
+                      .map((alarm) => `${alarm.code} x ${alarm.count}`)
+                      .join(", ")}`
+                  : "No"}
               </dd>
             </dl>
           </li>
