@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getAnalysis, type AnalysisRecord } from "@/lib/db";
+import { getAnalysis, updateAnalysisComment, type AnalysisRecord } from "@/lib/db";
 import type { NibeLogAnalysis } from "@/lib/nibeLogParser";
 import { decodeSerialNumber } from "@/lib/serialNumber";
 
@@ -13,11 +13,25 @@ const BACK_LINK_CLASSES =
 export default function LogPage() {
   const params = useParams<{ id: string }>();
   const [record, setRecord] = useState<AnalysisRecord | null | undefined>(undefined);
+  const [editingComment, setEditingComment] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void getAnalysis(Number(params.id)).then((result) => setRecord(result ?? null));
   }, [params.id]);
+
+  const startEditingComment = () => {
+    setCommentDraft(record?.comment ?? "");
+    setEditingComment(true);
+  };
+
+  const commitComment = async () => {
+    if (record?.id === undefined) return;
+    await updateAnalysisComment(record.id, commentDraft);
+    setRecord({ ...record, comment: commentDraft });
+    setEditingComment(false);
+  };
 
   if (record === undefined) {
     return <p className="text-sm text-zinc-500">Loading…</p>;
@@ -63,6 +77,27 @@ export default function LogPage() {
         <dt>Software version</dt>
         <dd>{analysis.softwareVersion ?? "—"}</dd>
       </dl>
+
+      <h2 className="mt-6 text-sm font-medium text-zinc-900 dark:text-zinc-100">Comment</h2>
+      {editingComment ? (
+        <textarea
+          autoFocus
+          rows={3}
+          value={commentDraft}
+          onChange={(e) => setCommentDraft(e.target.value)}
+          onBlur={() => void commitComment()}
+          placeholder="Add a comment…"
+          className="mt-2 w-full resize-none rounded border border-zinc-300 bg-white p-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={startEditingComment}
+          className="mt-2 w-full rounded border border-transparent p-2 text-left text-sm text-zinc-500 hover:bg-zinc-50 dark:text-zinc-500 dark:hover:bg-zinc-900"
+        >
+          {record.comment ? record.comment : "Add a comment…"}
+        </button>
+      )}
 
       <h2 className="mt-6 text-sm font-medium text-zinc-900 dark:text-zinc-100">Alarms</h2>
       {analysis.alarms.length === 0 ? (
