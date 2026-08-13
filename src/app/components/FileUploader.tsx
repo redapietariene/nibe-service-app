@@ -61,7 +61,7 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
         onClick={() => inputRef.current?.click()}
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
           isDragging
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+            ? "border-etb-red bg-red-50 dark:bg-red-950"
             : "border-zinc-300 dark:border-zinc-700"
         }`}
       >
@@ -83,7 +83,7 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
         type="button"
         disabled={!file || isSaving}
         onClick={handleOk}
-        className="mt-4 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-700"
+        className="mt-4 rounded bg-etb-red px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-700"
       >
         {isSaving ? "Analyzing..." : "OK"}
       </button>

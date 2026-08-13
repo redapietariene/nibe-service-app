@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,6 +27,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
           <main className="flex w-full max-w-3xl flex-1 flex-col items-center py-16 px-16 bg-white dark:bg-black">
+            <div className="flex flex-col items-center gap-2">
+              <Image
+                className="h-10 w-auto"
+                src="/etb-logo.jpg"
+                alt="ETB Värme logo"
+                width={214}
+                height={50}
+                priority
+              />
+              <p className="text-lg font-semibold">
+                <span className="text-nibe-red">NIBE</span>{" "}
+                <span className="text-zinc-900 dark:text-zinc-100">log analyser</span>
+              </p>
+            </div>
             {children}
           </main>
         </div>

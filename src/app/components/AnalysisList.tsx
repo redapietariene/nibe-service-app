@@ -106,7 +106,7 @@ export default function AnalysisList({ records, onDelete, onCommentChange }: Ana
               <button
                 type="button"
                 onClick={() => record.id !== undefined && onDelete(record.id)}
-                className="text-xs text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400"
+                className="text-xs text-etb-red underline underline-offset-2 hover:opacity-80"
               >
                 Delete
               </button>

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AlarmChart from "./components/AlarmChart";
@@ -46,42 +45,32 @@ export default function Home() {
   };
 
   return (
-    <>
-      <Image
-        className="h-10 w-auto bg-white p-1 rounded"
-        src="/nibe-logo.svg"
-        alt="NIBE logo"
-        width={200}
-        height={48}
-        priority
-      />
-      <div className="mt-10 w-full">
-        <div className="flex justify-end">
-          <Link
-            href="/tasks"
-            className="text-sm text-zinc-600 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            Tasks →
-          </Link>
-        </div>
-        <FileUploader onAnalyzed={loadRecords} />
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            onClick={handleClearAll}
-            disabled={records.length === 0}
-            className="text-sm text-red-600 underline underline-offset-2 hover:text-red-700 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline dark:text-red-500 dark:hover:text-red-400 dark:disabled:text-zinc-600"
-          >
-            Clear all logs
-          </button>
-        </div>
-        <AlarmChart records={records} />
-        <AnalysisList
-          records={records}
-          onDelete={handleDeleteLog}
-          onCommentChange={handleCommentChange}
-        />
+    <div className="mt-10 w-full">
+      <div className="flex justify-end">
+        <Link
+          href="/tasks"
+          className="text-sm text-zinc-600 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          Tasks →
+        </Link>
       </div>
-    </>
+      <FileUploader onAnalyzed={loadRecords} />
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handleClearAll}
+          disabled={records.length === 0}
+          className="text-sm text-etb-red underline underline-offset-2 hover:opacity-80 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline disabled:opacity-100"
+        >
+          Clear all logs
+        </button>
+      </div>
+      <AlarmChart records={records} />
+      <AnalysisList
+        records={records}
+        onDelete={handleDeleteLog}
+        onCommentChange={handleCommentChange}
+      />
+    </div>
   );
 }
