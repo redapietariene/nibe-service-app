@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import type { AnalysisRecord } from "@/lib/db";
 import type { NibeLogAnalysis } from "@/lib/nibeLogParser";
 import { decodeSerialNumber } from "@/lib/serialNumber";
@@ -6,14 +9,29 @@ import { decodeSerialNumber } from "@/lib/serialNumber";
 interface AnalysisListProps {
   records: AnalysisRecord[];
   onDelete: (id: number) => void;
+  onCommentChange: (id: number, comment: string) => void;
 }
 
-export default function AnalysisList({ records, onDelete }: AnalysisListProps) {
+export default function AnalysisList({ records, onDelete, onCommentChange }: AnalysisListProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [draft, setDraft] = useState("");
+
   if (records.length === 0) {
     return <p className="mt-6 text-sm text-zinc-500">No log files analyzed yet.</p>;
   }
 
   const sorted = [...records].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+
+  const startEditing = (record: AnalysisRecord) => {
+    if (record.id === undefined) return;
+    setDraft(record.comment ?? "");
+    setEditingId(record.id);
+  };
+
+  const commitEditing = (id: number) => {
+    onCommentChange(id, draft);
+    setEditingId(null);
+  };
 
   return (
     <ul className="mt-6 flex w-full flex-col gap-3">
@@ -63,6 +81,27 @@ export default function AnalysisList({ records, onDelete }: AnalysisListProps) {
                 </dd>
               </dl>
             </Link>
+            <div className="border-t border-zinc-100 px-4 py-2 dark:border-zinc-900">
+              {editingId === record.id ? (
+                <textarea
+                  autoFocus
+                  rows={2}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={() => commitEditing(record.id as number)}
+                  placeholder="Add a comment…"
+                  className="w-full resize-none rounded border border-zinc-300 bg-white p-2 text-xs text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startEditing(record)}
+                  className="w-full rounded p-2 text-left text-xs text-zinc-500 hover:bg-zinc-50 dark:text-zinc-500 dark:hover:bg-zinc-900"
+                >
+                  {record.comment ? record.comment : "Add a comment…"}
+                </button>
+              )}
+            </div>
             <div className="flex justify-end border-t border-zinc-100 px-4 py-2 dark:border-zinc-900">
               <button
                 type="button"

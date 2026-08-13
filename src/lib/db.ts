@@ -7,6 +7,7 @@ export interface AnalysisRecord {
   fileName: string;
   uploadedAt: string;
   result: unknown;
+  comment?: string;
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -52,6 +53,26 @@ export async function getAnalysis(id: number): Promise<AnalysisRecord | undefine
     const request = tx.objectStore(STORE_NAME).get(id);
     request.onsuccess = () => resolve(request.result as AnalysisRecord | undefined);
     request.onerror = () => reject(request.error);
+  });
+}
+
+export async function updateAnalysisComment(id: number, comment: string): Promise<void> {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const getRequest = store.get(id);
+    getRequest.onsuccess = () => {
+      const record = getRequest.result as AnalysisRecord | undefined;
+      if (!record) {
+        resolve();
+        return;
+      }
+      const putRequest = store.put({ ...record, comment });
+      putRequest.onsuccess = () => resolve();
+      putRequest.onerror = () => reject(putRequest.error);
+    };
+    getRequest.onerror = () => reject(getRequest.error);
   });
 }
 
