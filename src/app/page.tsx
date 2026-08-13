@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import AlarmChart from "./components/AlarmChart";
 import AnalysisList from "./components/AnalysisList";
 import FileUploader from "./components/FileUploader";
-import { clearAllAnalyses, getAnalyses, type AnalysisRecord } from "@/lib/db";
+import { clearAllAnalyses, deleteAnalysis, getAnalyses, type AnalysisRecord } from "@/lib/db";
 
 export default function Home() {
   const [records, setRecords] = useState<AnalysisRecord[]>([]);
@@ -25,6 +25,12 @@ export default function Home() {
   const handleClearAll = async () => {
     if (!window.confirm("Delete all uploaded log analyses? This cannot be undone.")) return;
     await clearAllAnalyses();
+    await loadRecords();
+  };
+
+  const handleDeleteLog = async (id: number) => {
+    if (!window.confirm("Delete this log analysis? This cannot be undone.")) return;
+    await deleteAnalysis(id);
     await loadRecords();
   };
 
@@ -59,7 +65,7 @@ export default function Home() {
           </button>
         </div>
         <AlarmChart records={records} />
-        <AnalysisList records={records} />
+        <AnalysisList records={records} onDelete={handleDeleteLog} />
       </div>
     </>
   );

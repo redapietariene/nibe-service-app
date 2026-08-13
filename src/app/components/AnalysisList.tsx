@@ -5,9 +5,10 @@ import { decodeSerialNumber } from "@/lib/serialNumber";
 
 interface AnalysisListProps {
   records: AnalysisRecord[];
+  onDelete: (id: number) => void;
 }
 
-export default function AnalysisList({ records }: AnalysisListProps) {
+export default function AnalysisList({ records, onDelete }: AnalysisListProps) {
   if (records.length === 0) {
     return <p className="mt-6 text-sm text-zinc-500">No log files analyzed yet.</p>;
   }
@@ -22,11 +23,11 @@ export default function AnalysisList({ records }: AnalysisListProps) {
         return (
           <li
             key={record.id}
-            className="rounded-lg border border-zinc-200 text-sm dark:border-zinc-800"
+            className="overflow-hidden rounded-lg border border-zinc-200 text-sm dark:border-zinc-800"
           >
             <Link
               href={`/log/${record.id}`}
-              className="block rounded-lg p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              className="block p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium">{record.fileName}</span>
@@ -62,6 +63,15 @@ export default function AnalysisList({ records }: AnalysisListProps) {
                 </dd>
               </dl>
             </Link>
+            <div className="flex justify-end border-t border-zinc-100 px-4 py-2 dark:border-zinc-900">
+              <button
+                type="button"
+                onClick={() => record.id !== undefined && onDelete(record.id)}
+                className="text-xs text-red-600 underline underline-offset-2 hover:text-red-700 dark:text-red-500 dark:hover:text-red-400"
+              >
+                Delete
+              </button>
+            </div>
           </li>
         );
       })}
