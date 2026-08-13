@@ -27,3 +27,6 @@ Functions:
 - clearAllAnalyses() — wipes all records from the store.
 
 It's consumed in src/app/page.tsx (the only other file referencing IndexedDB), which uses it to persist and list uploaded log analyses in the browser — matching the "no backend, browser-persisted data" architecture in CLAUDE.md.
+
+## docs/nibe-log-help.md
+nibe-log-help.md file in docs/ folder was referenced to claude when asked to decode serial number of the device.
