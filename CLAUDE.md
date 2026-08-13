@@ -9,12 +9,12 @@ A simple web app for Nibe service, which analyses nibe heat pump log and fetches
 - Tailwind CSS for all styling
 
 ## Architecture
-- Data persists through a browser
+- Data persists through a browser (in IndexedDB)
 - No backend
 - No user accounts
 
 ## Running the app
-Run `npm run dev`. The app runs at http://localhost:3001.
+Run `npm run dev`. The app runs at http://localhost:3000.
 
 ## Conventions
 - New pages go inside the `app/` folder
@@ -22,4 +22,5 @@ Run `npm run dev`. The app runs at http://localhost:3001.
 
 ## Do not
 - Do not add npm packages without asking first
+- Do not add external libraries without asking first
 - Do not put secrets or API keys in source files — use .env.local for environment variables
