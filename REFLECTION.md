@@ -1,4 +1,5 @@
 ## The scope of Sprint1
+The goal of sprint 1 - to be able to upload logs and to see device information and alarms.
 - Upload the log file
 - Show uploaded log files as list
 - Show log period, device article number, manufacturing date, software version.
@@ -13,6 +14,8 @@ Recommendation: IndexedDB. Even though today's data (filename, date, analysis re
 ## IndexedDB wrapper
 
 One tradeoff to accept going in: IndexedDB's raw API is clunkier than localStorage's. Therefore, created a small wrapper to keep it simple.
+
+Discussed with claude if wrapper is really needed, as later IndexedDB will be changed with DB in backend. Claude recommended to build it even later DB will be migrated.
 
 Wrapper is in File: src/lib/db.ts
 
@@ -30,3 +33,13 @@ It's consumed in src/app/page.tsx (the only other file referencing IndexedDB), w
 
 ## docs/nibe-log-help.md
 nibe-log-help.md file in docs/ folder was referenced to claude when asked to decode serial number of the device.
+
+## docs/next-js-documentation.md
+next-js-documentation.md file in docs folder was referened to claude when asked to create new pages (tasks and log detail page), also to create layout.
+
+## design pass
+asked claude to use www.etb.se styles - etb logo and colors (red) used
+asked claude to use ETB logo in all pages - claude added etb logo to layout
+
+## what was harder than the plain html
+to understand app structure, what tsx files mean
