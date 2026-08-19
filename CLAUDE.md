@@ -24,3 +24,6 @@ Run `npm run dev`. The app runs at http://localhost:3000.
 - Do not add npm packages without asking first
 - Do not add external libraries without asking first
 - Do not put secrets or API keys in source files — use .env.local for environment variables
+
+## Clean code
+- Keep code clean and simple
