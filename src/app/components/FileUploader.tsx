@@ -43,6 +43,16 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
     setError(null);
   };
 
+  const analyzeFile = async (file: File) => {
+    const text = await file.text();
+    const result = parseNibeLog(text);
+    await saveAnalysis({
+      fileName: file.name,
+      uploadedAt: new Date().toISOString(),
+      result,
+    });
+  };
+
   const handleOk = async () => {
     if (files.length === 0) return;
     setIsSaving(true);
@@ -51,14 +61,9 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
     const failed: string[] = [];
     for (const file of files) {
       try {
-        const text = await file.text();
-        const result = parseNibeLog(text);
-        await saveAnalysis({
-          fileName: file.name,
-          uploadedAt: new Date().toISOString(),
-          result,
-        });
-      } catch {
+        await analyzeFile(file);
+      } catch (err) {
+        console.error(`Failed to analyze ${file.name}:`, err);
         failed.push(file.name);
       }
     }
