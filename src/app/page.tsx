@@ -45,26 +45,38 @@ export default function Home() {
   };
 
   return (
-    <div className="mt-10 w-full">
-      <div className="flex justify-end">
+    <div className="flex w-full flex-col gap-10">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted">
+            Log workspace
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-black uppercase tracking-tight text-foreground">
+            Upload &amp; review
+          </h2>
+        </div>
         <Link
           href="/tasks"
-          className="text-sm text-zinc-600 underline underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="mt-1 justify-self-end font-mono text-xs uppercase tracking-wide text-cold underline underline-offset-4 hover:text-hot"
         >
           Tasks →
         </Link>
       </div>
-      <FileUploader onAnalyzed={loadRecords} />
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={handleClearAll}
-          disabled={records.length === 0}
-          className="text-sm text-etb-red underline underline-offset-2 hover:opacity-80 disabled:cursor-not-allowed disabled:text-zinc-400 disabled:no-underline disabled:opacity-100"
-        >
-          Clear all logs
-        </button>
-      </div>
+
+      <section>
+        <FileUploader onAnalyzed={loadRecords} />
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={records.length === 0}
+            className="font-mono text-xs uppercase tracking-wide text-hot underline underline-offset-4 hover:opacity-80 disabled:cursor-not-allowed disabled:text-muted disabled:no-underline disabled:opacity-100"
+          >
+            Clear all logs
+          </button>
+        </div>
+      </section>
+
       <AlarmChart records={records} />
       <AnalysisList
         records={records}

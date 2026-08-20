@@ -17,7 +17,14 @@ export default function AnalysisList({ records, onDelete, onCommentChange }: Ana
   const [draft, setDraft] = useState("");
 
   if (records.length === 0) {
-    return <p className="mt-6 text-sm text-zinc-500">No log files analyzed yet.</p>;
+    return (
+      <section>
+        <h2 className="font-display text-lg font-black uppercase tracking-tight text-foreground">
+          Analyzed logs
+        </h2>
+        <p className="mt-3 text-sm text-muted">No log files analyzed yet.</p>
+      </section>
+    );
   }
 
   const sorted = [...records].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
@@ -34,86 +41,93 @@ export default function AnalysisList({ records, onDelete, onCommentChange }: Ana
   };
 
   return (
-    <ul className="mt-6 flex w-full flex-col gap-3">
-      {sorted.map((record) => {
-        const analysis = record.result as NibeLogAnalysis;
-        const serialInfo = decodeSerialNumber(analysis.serialNumber);
-        return (
-          <li
-            key={record.id}
-            className="overflow-hidden rounded-lg border border-zinc-200 text-sm dark:border-zinc-800"
-          >
-            <Link
-              href={`/log/${record.id}`}
-              className="block p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+    <section>
+      <h2 className="font-display text-lg font-black uppercase tracking-tight text-foreground">
+        Analyzed logs <span className="text-muted">({sorted.length})</span>
+      </h2>
+      <ul className="mt-4 flex w-full flex-col gap-3">
+        {sorted.map((record) => {
+          const analysis = record.result as NibeLogAnalysis;
+          const serialInfo = decodeSerialNumber(analysis.serialNumber);
+          return (
+            <li
+              key={record.id}
+              className="overflow-hidden rounded-md border border-line bg-surface text-sm"
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{record.fileName}</span>
-                <span className="text-xs text-zinc-500">
-                  {new Date(record.uploadedAt).toLocaleString()}
-                </span>
+              <Link
+                href={`/log/${record.id}`}
+                className="block p-4 hover:bg-cold-soft"
+              >
+                <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+                  <span className="min-w-0 truncate font-mono text-sm font-medium text-foreground">
+                    {record.fileName}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted">
+                    {new Date(record.uploadedAt).toLocaleString()}
+                  </span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-xs">
+                  <dt className="uppercase tracking-wide text-muted">Log period</dt>
+                  <dd className="text-foreground">
+                    {analysis.dateFrom ?? "—"} – {analysis.dateTo ?? "—"}
+                  </dd>
+                  <dt className="uppercase tracking-wide text-muted">Serial number</dt>
+                  <dd className="text-foreground">{analysis.serialNumber ?? "—"}</dd>
+                  <dt className="uppercase tracking-wide text-muted">Article number</dt>
+                  <dd className="text-foreground">{serialInfo?.articleNumber ?? "—"}</dd>
+                  <dt className="uppercase tracking-wide text-muted">Date of manufacturing</dt>
+                  <dd className="text-foreground">{serialInfo?.manufactureDate ?? "—"}</dd>
+                  <dt className="uppercase tracking-wide text-muted">Software version</dt>
+                  <dd className="text-foreground">{analysis.softwareVersion ?? "—"}</dd>
+                  <dt className="uppercase tracking-wide text-muted">Alarms</dt>
+                  <dd className={analysis.alarms.length ? "font-medium text-hot" : "text-foreground"}>
+                    {analysis.alarms.length
+                      ? `Yes, ${analysis.alarms
+                          .map(
+                            (alarm) =>
+                              `${alarm.code} x ${alarm.count} (${(alarm.startTimes ?? [])
+                                .map((t) => t.slice(11, 16))
+                                .join(", ")})`,
+                          )
+                          .join(", ")}`
+                      : "No"}
+                  </dd>
+                </dl>
+              </Link>
+              <div className="border-t border-line px-4 py-2">
+                {editingId === record.id ? (
+                  <textarea
+                    autoFocus
+                    rows={2}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={() => commitEditing(record.id as number)}
+                    placeholder="Add a comment…"
+                    className="w-full resize-none rounded border border-line bg-background p-2 text-xs text-foreground outline-none focus:border-cold"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => startEditing(record)}
+                    className="w-full rounded p-2 text-left text-xs text-muted hover:bg-cold-soft"
+                  >
+                    {record.comment ? record.comment : "Add a comment…"}
+                  </button>
+                )}
               </div>
-              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-                <dt>Log period</dt>
-                <dd>
-                  {analysis.dateFrom ?? "—"} – {analysis.dateTo ?? "—"}
-                </dd>
-                <dt>Serial number</dt>
-                <dd>{analysis.serialNumber ?? "—"}</dd>
-                <dt>Article number</dt>
-                <dd>{serialInfo?.articleNumber ?? "—"}</dd>
-                <dt>Date of manufacturing</dt>
-                <dd>{serialInfo?.manufactureDate ?? "—"}</dd>
-                <dt>Software version</dt>
-                <dd>{analysis.softwareVersion ?? "—"}</dd>
-                <dt>Alarms</dt>
-                <dd>
-                  {analysis.alarms.length
-                    ? `Yes, ${analysis.alarms
-                        .map(
-                          (alarm) =>
-                            `${alarm.code} x ${alarm.count} (${(alarm.startTimes ?? [])
-                              .map((t) => t.slice(11, 16))
-                              .join(", ")})`,
-                        )
-                        .join(", ")}`
-                    : "No"}
-                </dd>
-              </dl>
-            </Link>
-            <div className="border-t border-zinc-100 px-4 py-2 dark:border-zinc-900">
-              {editingId === record.id ? (
-                <textarea
-                  autoFocus
-                  rows={2}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onBlur={() => commitEditing(record.id as number)}
-                  placeholder="Add a comment…"
-                  className="w-full resize-none rounded border border-zinc-300 bg-white p-2 text-xs text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
-                />
-              ) : (
+              <div className="flex justify-end border-t border-line px-4 py-2">
                 <button
                   type="button"
-                  onClick={() => startEditing(record)}
-                  className="w-full rounded p-2 text-left text-xs text-zinc-500 hover:bg-zinc-50 dark:text-zinc-500 dark:hover:bg-zinc-900"
+                  onClick={() => record.id !== undefined && onDelete(record.id)}
+                  className="font-mono text-xs uppercase tracking-wide text-hot underline underline-offset-4 hover:opacity-80"
                 >
-                  {record.comment ? record.comment : "Add a comment…"}
+                  Delete
                 </button>
-              )}
-            </div>
-            <div className="flex justify-end border-t border-zinc-100 px-4 py-2 dark:border-zinc-900">
-              <button
-                type="button"
-                onClick={() => record.id !== undefined && onDelete(record.id)}
-                className="text-xs text-etb-red underline underline-offset-2 hover:opacity-80"
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

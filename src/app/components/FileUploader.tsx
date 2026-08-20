@@ -93,10 +93,8 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
           handleFiles(e.dataTransfer.files);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
-          isDragging
-            ? "border-etb-red bg-red-50 dark:bg-red-950"
-            : "border-zinc-300 dark:border-zinc-700"
+        className={`flex w-full cursor-pointer flex-col justify-center gap-2 rounded-md border-2 border-dashed p-10 text-center transition-colors ${
+          isDragging ? "border-hot bg-hot-soft" : "border-line bg-surface"
         }`}
       >
         <input
@@ -108,7 +106,7 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
           onChange={(e) => handleFiles(e.target.files)}
         />
         {files.length > 0 ? (
-          <ul className="w-full text-left text-sm text-zinc-600 dark:text-zinc-400">
+          <ul className="w-full text-left font-mono text-xs text-muted">
             {files.map((f, i) => (
               <li key={`${f.name}-${i}`} className="truncate">
                 {f.name} ({formatMb(f.size)})
@@ -116,21 +114,21 @@ export default function FileUploader({ onAnalyzed }: FileUploaderProps) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="w-full text-sm text-muted">
             Drag and drop log files here, or click to browse (up to 500 MB total)
           </p>
         )}
       </div>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-hot">{error}</p>}
 
       <button
         type="button"
         disabled={files.length === 0 || isSaving}
         onClick={handleOk}
-        className="mt-4 rounded bg-etb-red px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-700"
+        className="mt-4 rounded-md bg-hot px-5 py-2.5 font-mono text-xs font-bold uppercase tracking-wide text-white transition-colors hover:bg-hot/90 disabled:cursor-not-allowed disabled:bg-line disabled:text-muted"
       >
-        {isSaving ? "Analyzing..." : "OK"}
+        {isSaving ? "Analyzing…" : "OK"}
       </button>
     </div>
   );
