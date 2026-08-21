@@ -17,6 +17,7 @@ const PLOT_HEIGHT_PX = 200;
 const LABEL_ROW_PX = 24;
 const MIN_SLOT_PX = 14;
 const MAX_X_LABELS = 10;
+const TOOLTIP_GAP_PX = 10;
 
 function niceMax(value: number): number {
   if (value <= 0) return 1;
@@ -31,9 +32,17 @@ function barHeight(count: number, yMax: number): number {
   return Math.max(2, Math.round((count / yMax) * PLOT_HEIGHT_PX));
 }
 
+interface HoverTooltip {
+  x: number;
+  y: number;
+  text: string;
+  placement: "above" | "below";
+}
+
 export default function AlarmChart({ records }: AlarmChartProps) {
   const [granularity, setGranularity] = useState<AlarmChartGranularity>("day");
   const [showTable, setShowTable] = useState(false);
+  const [hoverTooltip, setHoverTooltip] = useState<HoverTooltip | null>(null);
 
   const alarmCodeSummaries = useMemo(() => getAlarmCodeSummary(records), [records]);
   const alarmCodes = useMemo(() => alarmCodeSummaries.map((s) => s.code), [alarmCodeSummaries]);
@@ -116,13 +125,27 @@ export default function AlarmChart({ records }: AlarmChartProps) {
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {alarmCodeSummaries.map(({ code, count }) => {
               const enabled = isEnabled(code);
+              const chipTooltipText = `${count} occurrence${count === 1 ? "" : "s"} of alarm ${code}`;
+              const showChipTooltip = (target: HTMLElement) => {
+                const rect = target.getBoundingClientRect();
+                setHoverTooltip({
+                  x: rect.left + rect.width / 2,
+                  y: rect.bottom,
+                  text: chipTooltipText,
+                  placement: "below",
+                });
+              };
               return (
                 <button
                   key={code}
                   type="button"
                   onClick={() => toggle(code)}
                   aria-pressed={enabled}
-                  title={`${count} occurrence${count === 1 ? "" : "s"} of alarm ${code}`}
+                  aria-label={chipTooltipText}
+                  onMouseEnter={(e) => showChipTooltip(e.currentTarget)}
+                  onMouseLeave={() => setHoverTooltip(null)}
+                  onFocus={(e) => showChipTooltip(e.currentTarget)}
+                  onBlur={() => setHoverTooltip(null)}
                   className={`flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors ${
                     enabled
                       ? "border-cold bg-cold-soft text-foreground"
@@ -186,26 +209,43 @@ export default function AlarmChart({ records }: AlarmChartProps) {
               className="flex min-w-full items-end gap-[2px] border-b border-line"
               style={{ width: `${data.length * MIN_SLOT_PX}px`, height: PLOT_HEIGHT_PX }}
             >
-              {data.map((point) => (
-                <div
-                  key={point.bucket}
-                  className="group relative flex h-full flex-1 items-end justify-center"
-                >
-                  <div
-                    tabIndex={0}
-                    role="img"
-                    aria-label={`${point.label}: ${point.count} alarm${point.count === 1 ? "" : "s"}`}
-                    className={`mx-auto w-full max-w-[24px] rounded-t-[4px] outline-none focus-visible:ring-2 focus-visible:ring-cold ${
-                      point.count > 0 ? "bg-cold" : "bg-line"
-                    }`}
-                    style={{ height: barHeight(point.count, yMax) }}
-                  />
-                  <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-panel px-2 py-1 font-mono text-xs text-panel-foreground opacity-0 shadow transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                    <span className="font-medium">{point.count}</span> alarm
-                    {point.count === 1 ? "" : "s"} · {point.label}
+              {data.map((point) => {
+                const codesText = point.codes
+                  .map((c) => (c.count > 1 ? `${c.code} ×${c.count}` : c.code))
+                  .join(", ");
+                const tooltipText =
+                  point.count > 0 ? `${codesText} · ${point.label}` : `No alarms · ${point.label}`;
+                return (
+                  <div key={point.bucket} className="flex h-full flex-1 items-end justify-center">
+                    <div
+                      tabIndex={0}
+                      role="img"
+                      aria-label={tooltipText}
+                      onMouseEnter={(e) =>
+                        setHoverTooltip({ x: e.clientX, y: e.clientY, text: tooltipText, placement: "above" })
+                      }
+                      onMouseMove={(e) =>
+                        setHoverTooltip({ x: e.clientX, y: e.clientY, text: tooltipText, placement: "above" })
+                      }
+                      onMouseLeave={() => setHoverTooltip(null)}
+                      onFocus={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setHoverTooltip({
+                          x: rect.left + rect.width / 2,
+                          y: rect.top,
+                          text: tooltipText,
+                          placement: "above",
+                        });
+                      }}
+                      onBlur={() => setHoverTooltip(null)}
+                      className={`mx-auto w-full max-w-[24px] rounded-t-[4px] outline-none focus-visible:ring-2 focus-visible:ring-cold ${
+                        point.count > 0 ? "bg-cold" : "bg-line"
+                      }`}
+                      style={{ height: barHeight(point.count, yMax) }}
+                    />
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div
               className="mt-1 flex min-w-full"
@@ -222,6 +262,22 @@ export default function AlarmChart({ records }: AlarmChartProps) {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {hoverTooltip && (
+        <div
+          className="pointer-events-none fixed z-50 whitespace-nowrap rounded-md bg-panel px-2.5 py-1.5 font-mono text-xs text-panel-foreground shadow-lg"
+          style={{
+            left: hoverTooltip.x,
+            top: hoverTooltip.y,
+            transform:
+              hoverTooltip.placement === "above"
+                ? `translate(-50%, calc(-100% - ${TOOLTIP_GAP_PX}px))`
+                : `translate(-50%, ${TOOLTIP_GAP_PX}px)`,
+          }}
+        >
+          {hoverTooltip.text}
         </div>
       )}
     </div>

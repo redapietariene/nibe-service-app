@@ -3,15 +3,16 @@ import type { NibeLogAnalysis } from "@/lib/nibeLogParser";
 
 export type AlarmChartGranularity = "day" | "hour";
 
+export interface AlarmCodeSummary {
+  code: string;
+  count: number;
+}
+
 export interface AlarmChartPoint {
   bucket: string;
   label: string;
   count: number;
-}
-
-export interface AlarmCodeSummary {
-  code: string;
-  count: number;
+  codes: AlarmCodeSummary[];
 }
 
 // Distinct alarm codes found across the analyzed logs, with their total
@@ -65,7 +66,7 @@ export function combineAlarmBuckets(
   granularity: AlarmChartGranularity,
   enabledCodes: ReadonlySet<string>
 ): AlarmChartPoint[] {
-  const totals = new Map<string, number>();
+  const totals = new Map<string, Map<string, number>>();
   let rangeStart: Date | null = null;
   let rangeEnd: Date | null = null;
 
@@ -75,7 +76,9 @@ export function combineAlarmBuckets(
       if (!enabledCodes.has(alarm.code)) continue;
       for (const timestamp of alarm.startTimes) {
         const bucket = granularity === "day" ? timestamp.slice(0, 10) : `${timestamp.slice(0, 13)}:00`;
-        totals.set(bucket, (totals.get(bucket) ?? 0) + 1);
+        const bucketCodes = totals.get(bucket) ?? new Map<string, number>();
+        bucketCodes.set(alarm.code, (bucketCodes.get(alarm.code) ?? 0) + 1);
+        totals.set(bucket, bucketCodes);
       }
     }
 
@@ -91,14 +94,21 @@ export function combineAlarmBuckets(
 
   if (!rangeStart || !rangeEnd) return [];
 
+  const pointFor = (bucket: string, label: string): AlarmChartPoint => {
+    const codes = Array.from(totals.get(bucket)?.entries() ?? [])
+      .map(([code, count]) => ({ code, count }))
+      .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+    const count = codes.reduce((sum, c) => sum + c.count, 0);
+    return { bucket, label, count, codes };
+  };
+
   const points: AlarmChartPoint[] = [];
 
   if (granularity === "day") {
     const cursor = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
     const end = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
     while (cursor <= end) {
-      const bucket = dayBucketOf(cursor);
-      points.push({ bucket, label: DAY_LABEL_FORMATTER.format(cursor), count: totals.get(bucket) ?? 0 });
+      points.push(pointFor(dayBucketOf(cursor), DAY_LABEL_FORMATTER.format(cursor)));
       cursor.setDate(cursor.getDate() + 1);
     }
   } else {
@@ -115,8 +125,7 @@ export function combineAlarmBuckets(
       rangeEnd.getHours()
     );
     while (cursor <= end) {
-      const bucket = hourBucketOf(cursor);
-      points.push({ bucket, label: HOUR_LABEL_FORMATTER.format(cursor), count: totals.get(bucket) ?? 0 });
+      points.push(pointFor(hourBucketOf(cursor), HOUR_LABEL_FORMATTER.format(cursor)));
       cursor.setHours(cursor.getHours() + 1);
     }
   }
