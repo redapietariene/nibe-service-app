@@ -31,8 +31,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-archivo);
-  --color-etb-red: #e02f38;
-  --color-nibe-red: #bd1d1d;
 }
 
 @media (prefers-color-scheme: dark) {
