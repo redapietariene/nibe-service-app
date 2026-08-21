@@ -9,6 +9,26 @@ export interface AlarmChartPoint {
   count: number;
 }
 
+export interface AlarmCodeSummary {
+  code: string;
+  count: number;
+}
+
+// Distinct alarm codes found across the analyzed logs, with their total
+// occurrence count, sorted for stable display order.
+export function getAlarmCodeSummary(records: AnalysisRecord[]): AlarmCodeSummary[] {
+  const totals = new Map<string, number>();
+  for (const record of records) {
+    const analysis = record.result as NibeLogAnalysis;
+    for (const alarm of analysis.alarms ?? []) {
+      totals.set(alarm.code, (totals.get(alarm.code) ?? 0) + alarm.count);
+    }
+  }
+  return Array.from(totals.entries())
+    .map(([code, count]) => ({ code, count }))
+    .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+}
+
 function parseTimestamp(value: string): Date {
   return new Date(value.replace(" ", "T"));
 }
@@ -42,7 +62,8 @@ const HOUR_LABEL_FORMATTER = new Intl.DateTimeFormat(undefined, {
 // being skipped and compressing the time axis.
 export function combineAlarmBuckets(
   records: AnalysisRecord[],
-  granularity: AlarmChartGranularity
+  granularity: AlarmChartGranularity,
+  enabledCodes: ReadonlySet<string>
 ): AlarmChartPoint[] {
   const totals = new Map<string, number>();
   let rangeStart: Date | null = null;
@@ -50,10 +71,12 @@ export function combineAlarmBuckets(
 
   for (const record of records) {
     const analysis = record.result as NibeLogAnalysis;
-    const buckets =
-      granularity === "day" ? analysis.alarmCountsByDay : analysis.alarmCountsByHour;
-    for (const { bucket, count } of buckets ?? []) {
-      totals.set(bucket, (totals.get(bucket) ?? 0) + count);
+    for (const alarm of analysis.alarms ?? []) {
+      if (!enabledCodes.has(alarm.code)) continue;
+      for (const timestamp of alarm.startTimes) {
+        const bucket = granularity === "day" ? timestamp.slice(0, 10) : `${timestamp.slice(0, 13)}:00`;
+        totals.set(bucket, (totals.get(bucket) ?? 0) + 1);
+      }
     }
 
     if (analysis.dateFrom) {

@@ -2,7 +2,12 @@
 
 import { useMemo, useState } from "react";
 import type { AnalysisRecord } from "@/lib/db";
-import { combineAlarmBuckets, type AlarmChartGranularity } from "@/lib/alarmChartData";
+import {
+  combineAlarmBuckets,
+  getAlarmCodeSummary,
+  type AlarmChartGranularity,
+} from "@/lib/alarmChartData";
+import { useAlarmCodeFilter } from "@/lib/useAlarmCodeFilter";
 
 interface AlarmChartProps {
   records: AnalysisRecord[];
@@ -30,10 +35,16 @@ export default function AlarmChart({ records }: AlarmChartProps) {
   const [granularity, setGranularity] = useState<AlarmChartGranularity>("day");
   const [showTable, setShowTable] = useState(false);
 
-  const data = useMemo(() => combineAlarmBuckets(records, granularity), [records, granularity]);
+  const alarmCodeSummaries = useMemo(() => getAlarmCodeSummary(records), [records]);
+  const alarmCodes = useMemo(() => alarmCodeSummaries.map((s) => s.code), [alarmCodeSummaries]);
+  const { enabledCodes, isEnabled, toggle, showAll, hideAll } = useAlarmCodeFilter(alarmCodes);
+
+  const data = useMemo(
+    () => combineAlarmBuckets(records, granularity, enabledCodes),
+    [records, granularity, enabledCodes]
+  );
   const yMax = useMemo(() => niceMax(data.reduce((max, d) => Math.max(max, d.count), 0)), [data]);
   const labelStride = Math.max(1, Math.ceil(data.length / MAX_X_LABELS));
-  const hasAlarms = data.some((point) => point.count > 0);
 
   return (
     <div className="w-full rounded-md border border-line bg-surface p-5">
@@ -74,10 +85,73 @@ export default function AlarmChart({ records }: AlarmChartProps) {
         </div>
       </div>
 
+      {alarmCodeSummaries.length > 0 && (
+        <div className="mt-4 border-t border-line pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="font-mono text-[11px] uppercase tracking-wide text-muted">
+              Alarm codes{" "}
+              <span className="text-muted">
+                ({enabledCodes.size}/{alarmCodeSummaries.length} shown)
+              </span>
+            </p>
+            <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-wide">
+              <button
+                type="button"
+                onClick={showAll}
+                disabled={enabledCodes.size === alarmCodeSummaries.length}
+                className="text-cold underline underline-offset-4 hover:text-hot disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+              >
+                Show all
+              </button>
+              <button
+                type="button"
+                onClick={hideAll}
+                disabled={enabledCodes.size === 0}
+                className="text-cold underline underline-offset-4 hover:text-hot disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
+              >
+                Hide all
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {alarmCodeSummaries.map(({ code, count }) => {
+              const enabled = isEnabled(code);
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => toggle(code)}
+                  aria-pressed={enabled}
+                  title={`${count} occurrence${count === 1 ? "" : "s"} of alarm ${code}`}
+                  className={`flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors ${
+                    enabled
+                      ? "border-cold bg-cold-soft text-foreground"
+                      : "border-line bg-surface text-muted hover:border-cold/50"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      enabled ? "bg-cold shadow-[0_0_4px_var(--cold)]" : "bg-line"
+                    }`}
+                  />
+                  {code}
+                  <span className="text-muted">×{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {data.length === 0 ? (
         <p className="mt-6 text-sm text-muted">No log files analyzed yet.</p>
-      ) : !hasAlarms ? (
+      ) : alarmCodeSummaries.length === 0 ? (
         <p className="mt-6 text-sm text-muted">No alarms recorded in the analyzed logs.</p>
+      ) : enabledCodes.size === 0 ? (
+        <p className="mt-6 text-sm text-muted">
+          All alarm codes are switched off. Turn one back on above to see it on the chart.
+        </p>
       ) : showTable ? (
         <div className="mt-4 max-h-64 overflow-y-auto">
           <table className="w-full text-left font-mono text-xs">
